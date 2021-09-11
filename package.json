@@ -1,6 +1,6 @@
 {
   "name": "pommos",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Florian Schaal",
   "main": "dist_main/index.js",
   "homepage": "./",
@@ -51,11 +51,13 @@
     "@electron/remote": "^1.2.1",
     "easytimer.js": "^4.5.0",
     "electron-is-dev": "^2.0.0",
+    "mitt": "^3.0.0",
     "node-notifier": "^10.0.0",
     "vue": "^3.0.5",
     "vue-router": "4",
     "vue-slider-component": "^4.0.0-beta.4",
     "vuex": "4",
+    "vuex-composition-helpers": "^1.0.23",
     "vuex-persistedstate": "^4.0.0"
   },
   "devDependencies": {

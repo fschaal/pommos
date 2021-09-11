@@ -4,48 +4,49 @@ import createPersistedState from "vuex-persistedstate";
 import { getters } from "./getters";
 import { mutations } from "./mutations";
 import { RoundType } from "../models";
+import { timer } from "./timer";
 
 const store: StoreOptions<RootState> = {
   plugins: [createPersistedState()],
   state: {
     rounds: [
       {
-        name: RoundType.Focus,
+        type: RoundType.Focus,
         time: 25,
         sequence: 1,
       },
       {
-        name: RoundType.Break,
+        type: RoundType.Break,
         time: 5,
         sequence: 2,
       },
       {
-        name: RoundType.Focus,
+        type: RoundType.Focus,
         time: 25,
         sequence: 3,
       },
       {
-        name: RoundType.Break,
+        type: RoundType.Break,
         time: 5,
         sequence: 4,
       },
       {
-        name: RoundType.Focus,
+        type: RoundType.Focus,
         time: 25,
         sequence: 5,
       },
       {
-        name: RoundType.Break,
+        type: RoundType.Break,
         time: 5,
         sequence: 6,
       },
       {
-        name: RoundType.Focus,
+        type: RoundType.Focus,
         time: 25,
         sequence: 7,
       },
       {
-        name: RoundType.LongBreak,
+        type: RoundType.LongBreak,
         time: 15,
         sequence: 8,
       },
@@ -56,6 +57,9 @@ const store: StoreOptions<RootState> = {
   },
   getters: getters,
   mutations: mutations,
+  modules: {
+    timer,
+  },
 };
 
 export default new Vuex.Store<RootState>(store);

@@ -3,10 +3,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, onMounted } from "vue";
+import { initialize } from "./util/TimerBackgroundWorker";
 
 export default defineComponent({
   name: "App",
+  setup() {
+    onMounted(() => {
+      initialize();
+    });
+  },
 });
 </script>
 

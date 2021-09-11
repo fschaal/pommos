@@ -3,13 +3,13 @@
     class="flex flex-col w-full h-screen p-2 bg-gray-100"
   >
     <div class="flex w-full justify-end">
-      <router-link to="settings">
+      <button @click="navigateToSettings">
         <img
           class="w-6"
           src="../assets/settings-gear.svg"
           alt=""
         />
-      </router-link>
+      </button>
     </div>
     <div
       class="
@@ -34,7 +34,7 @@
           {{ countdownTime }}
         </h1>
         <span class="text-appText">{{
-          currentRound.name
+          currentRound.type
         }}</span>
       </div>
       <div
@@ -67,15 +67,15 @@
         <span
           class="w-full text-center text-xs text-appText"
           >{{
-            currentRound.name === RoundType.Break ||
-            currentRound.name === RoundType.LongBreak
+            currentRound.type === RoundType.Break ||
+            currentRound.type === RoundType.LongBreak
               ? "Have a "
               : ""
           }}
           {{
-            currentRound.name === RoundType.Focus
-              ? currentRound.name
-              : currentRound.name?.toLowerCase()
+            currentRound.type === RoundType.Focus
+              ? currentRound.type
+              : currentRound.type?.toLowerCase()
           }}
           for {{ currentRound.time }} min</span
         >
@@ -98,13 +98,13 @@
           @click="toggleTimer"
         >
           <img
-            v-if="!timerIsRunning"
+            v-if="!timerActive"
             class="w-8 h-8"
             src="../assets/button-play.svg"
             alt=""
           />
           <img
-            v-if="timerIsRunning"
+            v-if="timerActive"
             class="w-8 h-8"
             src="../assets/button-pause.svg"
             alt=""
@@ -112,7 +112,23 @@
         </button>
       </div>
     </div>
-    <div class="flex w-full p-2 justify-end">
+    <div
+      class="
+        flex
+        w-full
+        p-2
+        justify-end
+        space-x-1
+        items-center
+      "
+    >
+      <button @click="resetRounds">
+        <img
+          class="w-4 h-4"
+          src="../assets/button-reset.svg"
+          alt=""
+        />
+      </button>
       <button @click="skipRound">
         <img
           class="w-4 h-4"
@@ -125,7 +141,6 @@
 </template>
 
 <script lang="ts">
-import Timer from "easytimer.js";
 import { Round, RoundType } from "../models";
 import {
   computed,
@@ -137,93 +152,142 @@ import {
 } from "vue";
 import TimeConverter from "../util/TimeConverter";
 import { useStore } from "vuex";
+import { EventBus } from "../util/EventBus";
+import { TimerMutations } from "../store/timer/mutations";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "Home",
   setup() {
     const store = useStore();
+    const router = useRouter();
     const data = reactive({
-      timer: new Timer(),
-      timerIsRunning: false,
       countdownTime: "00:00",
       currentRound: {
-        name: RoundType.Focus,
-        sequence: 0,
-        time: 0,
+        type: RoundType.Focus,
+        sequence: -1,
+        time: 1,
       } as Round,
     });
 
+    const timerActive = computed(
+      () => store.getters.active
+    );
+
     const rounds = computed(() => store.getters.rounds);
+
+    const currentRoundIndex = computed(
+      () => store.getters.currentTimerRoundIndex
+    );
 
     watch(
       () => data.currentRound,
-      (newRound) => {
-        data.countdownTime = TimeConverter.timeToString(
-          newRound.time
-        );
+      () => {
+        if (data.countdownTime === "00:00") {
+          data.countdownTime =
+            TimeConverter.elapsedTimeToString(
+              store.getters.currentElapsedSeconds,
+              data.currentRound.time
+            );
+        } else {
+          data.countdownTime = TimeConverter.timeToString(
+            data.currentRound.time
+          );
+        }
       }
     );
 
+    watch(currentRoundIndex, (newRoundIndex) => {
+      data.currentRound = rounds.value[newRoundIndex];
+    });
+
     const toggleTimer = () => {
-      if (!data.timerIsRunning) {
-        data.timer.start({
-          countdown: true,
-          startValues: { minutes: data.currentRound.time },
-        });
-        data.timerIsRunning = true;
+      if (!timerActive.value) {
+        store.commit(
+          TimerMutations.SET_TIMER_ACTIVE_STATE,
+          true
+        );
+        EventBus.emit("startTimer", data.currentRound.time);
       } else {
-        data.timer.pause();
-        data.timerIsRunning = false;
+        EventBus.emit("pauseTimer", null);
+        store.commit(
+          TimerMutations.SET_TIMER_ACTIVE_STATE,
+          false
+        );
       }
     };
 
     const setNextCurrentRound = () => {
       if (data.currentRound.sequence === 8) {
-        data.currentRound = rounds.value[0];
+        store.commit(
+          TimerMutations.SET_CURRENT_TIMER_ROUND_INDEX,
+          0
+        );
       } else {
-        data.currentRound =
-          rounds.value[data.currentRound.sequence];
+        store.commit(
+          TimerMutations.SET_CURRENT_TIMER_ROUND_INDEX,
+          currentRoundIndex.value + 1
+        );
       }
     };
 
     const skipRound = () => {
-      data.timer.stop();
-      data.timerIsRunning = false;
+      EventBus.emit("stopTimer", null);
+      store.commit(
+        TimerMutations.SET_TIMER_ACTIVE_STATE,
+        false
+      );
       setNextCurrentRound();
     };
 
-    onMounted(() => {
+    const resetRounds = () => {
+      EventBus.emit("resetTimer", null);
+      store.commit(
+        TimerMutations.SET_TIMER_ACTIVE_STATE,
+        false
+      );
       data.currentRound = rounds.value[0];
-      data.timer.addEventListener("secondsUpdated", () => {
-        data.countdownTime = `${data.timer
-          .getTimeValues()
-          .minutes.toString()}:${
-          data.timer.getTimeValues().seconds.toString()
-            .length === 1
-            ? data.timer
-                .getTimeValues()
-                .seconds.toString()
-                .padStart(2, "0")
-            : data.timer.getTimeValues().seconds.toString()
-        }`;
-      });
-      data.timer.addEventListener("targetAchieved", () => {
-        if (data.currentRound.name === RoundType.Focus) {
-          new Notification("Focus session ended", {
-            body: "It's time for a break now.",
-            badge: "/app-icon.png",
-          });
-        } else {
-          new Notification("Break ended", {
-            body: "Break ended so its time to focus again.",
-            badge: "/app-icon.png",
-          });
-        }
+      store.commit(
+        TimerMutations.SET_CURRENT_TIMER_ROUND_INDEX,
+        0
+      );
+      data.countdownTime = TimeConverter.timeToString(
+        data.currentRound.time
+      );
+    };
 
-        setNextCurrentRound();
+    const navigateToSettings = () => {
+      router.push("/settings");
+    };
 
-        data.timerIsRunning = false;
+    const listenForTickEvents = () => {
+      EventBus.off("tick");
+      EventBus.off("completedTimer");
+      EventBus.on("tick", (elapsedSeconds: number) => {
+        store.commit(
+          TimerMutations.SET_CURRENT_ELAPSED_SECONDS,
+          elapsedSeconds
+        );
+        data.countdownTime =
+          TimeConverter.elapsedTimeToString(
+            elapsedSeconds,
+            data.currentRound.time
+          );
       });
+
+      EventBus.on("completedTimer", () => {
+        skipRound();
+      });
+    };
+
+    onMounted(() => {
+      listenForTickEvents();
+      data.currentRound =
+        rounds.value[store.getters.currentTimerRoundIndex];
+      data.countdownTime = TimeConverter.timeToString(
+        data.currentRound.time
+      );
+      EventBus.emit("createTimer", data.currentRound.type);
     });
 
     return {
@@ -232,6 +296,9 @@ export default defineComponent({
       toggleTimer,
       skipRound,
       RoundType,
+      timerActive,
+      navigateToSettings,
+      resetRounds,
     };
   },
 });

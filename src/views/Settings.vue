@@ -45,12 +45,12 @@
       >
     </div>
     <div class="flex justify-center">
-      <a
+      <button
         class="text-appText text-1xl font-medium"
-        href="#"
         @click="resetDefaults"
-        >Reset Defaults</a
       >
+        Reset Defaults
+      </button>
     </div>
   </div>
 </template>

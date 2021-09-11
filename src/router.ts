@@ -1,6 +1,6 @@
 import {
-  createMemoryHistory,
   createRouter,
+  createWebHashHistory,
   RouteRecordRaw,
 } from "vue-router";
 import Home from "/src/views/Home.vue";
@@ -18,7 +18,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHashHistory(),
   routes,
 });
 

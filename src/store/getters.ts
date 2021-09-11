@@ -6,13 +6,13 @@ export const getters: GetterTree<RootState, RootState> = {
   rounds(state: RootState): Round[] {
     const rounds = state.rounds;
     rounds.forEach((round: Round) => {
-      if (round.name === RoundType.Focus) {
+      if (round.type === RoundType.Focus) {
         round.time = state.focusDuration;
       }
-      if (round.name === RoundType.Break) {
+      if (round.type === RoundType.Break) {
         round.time = state.breakDuration;
       }
-      if (round.name === RoundType.LongBreak) {
+      if (round.type === RoundType.LongBreak) {
         round.time = state.longBreakDuration;
       }
     });

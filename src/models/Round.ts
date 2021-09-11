@@ -1,5 +1,5 @@
 export interface Round {
-  name: RoundType;
+  type: RoundType;
   time: number;
   sequence: number;
 }
@@ -7,5 +7,5 @@ export interface Round {
 export enum RoundType {
   Focus = "Focus",
   Break = "Break",
-  LongBreak = "LongBreak",
+  LongBreak = "Long Break",
 }
