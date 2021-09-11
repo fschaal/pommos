@@ -1,6 +1,6 @@
 {
   "name": "pommos",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "Florian Schaal",
   "main": "dist_main/index.js",
   "homepage": "./",
